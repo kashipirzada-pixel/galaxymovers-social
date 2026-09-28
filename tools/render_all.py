@@ -1,5 +1,6 @@
 import sys
-sys.path.insert(0, "/home/claude")
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from plan import POSTS
 from playwright.sync_api import sync_playwright
 from PIL import Image
@@ -93,14 +94,15 @@ def build(g):
         <div class="grid">{''.join(f'<div>{x}</div>' for x in g['areas'])}</div>"""
     return f"<html><head><style>{css(c)}</style></head><body><div class='card'>{body}{FOOT}</div></body></html>"
 
-out = "/home/claude/galaxymovers-social/posts/"
-with sync_playwright() as p:
-    b = p.chromium.launch(); pg = b.new_page(viewport={"width":1080,"height":1080})
-    for post in POSTS:
-        if post.get("existing"): continue
-        pg.set_content(build(post["g"])); pg.wait_for_timeout(300)
-        tmp = f"/home/claude/{post['slug']}.png"
-        pg.screenshot(path=tmp)
-        Image.open(tmp).convert("RGB").quantize(48).save(out + post["slug"] + ".png", optimize=True)
-        print("made", post["slug"])
-    b.close()
+if __name__ == "__main__":
+    out = "/home/claude/galaxymovers-social/posts/"
+    with sync_playwright() as p:
+        b = p.chromium.launch(); pg = b.new_page(viewport={"width":1080,"height":1080})
+        for post in POSTS:
+            if post.get("existing"): continue
+            pg.set_content(build(post["g"])); pg.wait_for_timeout(300)
+            tmp = f"/home/claude/{post['slug']}.png"
+            pg.screenshot(path=tmp)
+            Image.open(tmp).convert("RGB").quantize(48).save(out + post["slug"] + ".png", optimize=True)
+            print("made", post["slug"])
+        b.close()
